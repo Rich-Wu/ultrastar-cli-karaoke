@@ -1,6 +1,6 @@
 import { Effect } from "effect";
 import { Box, Text, useApp, useInput } from "ink";
-import type { FC } from "react";
+import type { FC, JSX } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { type Page, type Song, searchSongs } from "../api/usdb/search.ts";
 import { checkYtDlpAvailable } from "../api/youtube/check.ts";
@@ -20,7 +20,9 @@ import { downloadSong } from "./downloadSong.ts";
 
 type Mode = "form" | "results";
 
-export const App: FC = () => {
+type AppOptions = { songsDir: string };
+
+export const App: FC<AppOptions> = ({ songsDir }: AppOptions) => {
   const { exit } = useApp();
 
   const [mode, setMode] = useState<Mode>("form");
@@ -159,6 +161,7 @@ export const App: FC = () => {
       try {
         const result = await Effect.runPromise(
           downloadSong({
+            baseDir: songsDir,
             song,
             cookie,
             onProgress: (p) =>

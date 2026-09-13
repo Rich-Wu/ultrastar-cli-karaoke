@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { Effect } from "effect";
+import { parseArgs } from "node:util";
 
 export type DownloadedEntry = {
   apiId: number;
@@ -11,7 +12,17 @@ export type DownloadedEntry = {
   downloadedAt: string; // ISO
 };
 
-const getSongsBaseDir = () => join(process.cwd(), "songs");
+const getSongsBaseDir = () => {
+  const { values } = parseArgs({
+    args: Bun.argv.slice(2),
+    options: {
+      songsDir: { type: "string", short: "d" },
+    },
+  });
+  return values && values.songsDir
+    ? values.songsDir
+    : join(process.cwd(), "songs");
+};
 const getDownloadedFilePath = () => join(getSongsBaseDir(), "downloaded.json");
 
 export const loadDownloadedEntries: Effect.Effect<DownloadedEntry[], Error> =
