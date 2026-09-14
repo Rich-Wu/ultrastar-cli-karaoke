@@ -9,7 +9,7 @@ import { getYoutubeLinksById } from "../api/usdb/youtube.ts";
 import { downloadYoutubeVideoWithProgress } from "../api/youtube/download.ts";
 import type { YoutubeVideo } from "../api/youtube/search.ts";
 import { searchYoutubeVideos } from "../api/youtube/search.ts";
-import { ripAudio } from "../util/audio.ts";
+import { getAudio, ripAudio } from "../util/audio.ts";
 
 export type DownloadSongParams = {
   song: Song;
@@ -130,10 +130,7 @@ export const downloadSong = (
 
     yield* videoEff;
 
-    const audioEff = ripAudio(
-      join(songDir, "video.mp4"),
-      join(songDir, "audio.mp3"),
-    );
+    const audioEff = getAudio(songDir);
 
     // run in parallel
     yield* Effect.all([coverEff, lyricsEff, audioEff], { concurrency: 3 });
