@@ -9,6 +9,7 @@ import { getYoutubeLinksById } from "../api/usdb/youtube.ts";
 import { downloadYoutubeVideoWithProgress } from "../api/youtube/download.ts";
 import type { YoutubeVideo } from "../api/youtube/search.ts";
 import { searchYoutubeVideos } from "../api/youtube/search.ts";
+import { ripAudio } from "../util/audio.ts";
 
 export type DownloadSongParams = {
   song: Song;
@@ -99,12 +100,16 @@ export const downloadSong = (
       if (!parsed) return;
       const headers = {
         ...parsed.headers,
-        mp3: "video.mp4",
+        version: "1.1.0",
+        audio: "audio.mp3",
+        instrumental: "audio[INSTR].mp3",
         video: "video.mp4",
         cover: "cover.jpg",
       } as Record<string, string | undefined>;
       const headerLines = Object.entries(headers)
-        .filter(([, v]) => v != null && String(v).trim().length > 0)
+        .filter(
+          ([k, v]) => k != "mp3" && v != null && String(v).trim().length > 0,
+        )
         .map(([k, v]) => `#${k.toUpperCase()}:${v}`)
         .join("\n");
       const content = `${headerLines}\n${parsed.lyrics.trim()}\n`;
@@ -123,8 +128,15 @@ export const downloadSong = (
       (p) => onProgress?.(p.percent ?? 0),
     );
 
+    yield* videoEff;
+
+    const audioEff = ripAudio(
+      join(songDir, "video.mp4"),
+      join(songDir, "audio.mp3"),
+    );
+
     // run in parallel
-    yield* Effect.all([coverEff, lyricsEff, videoEff], { concurrency: 3 });
+    yield* Effect.all([coverEff, lyricsEff, audioEff], { concurrency: 3 });
 
     return { dirName, songDir } as DownloadSongResult;
   });
