@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { Effect } from "effect";
 import ffmpeg from "fluent-ffmpeg";
 import { join } from "node:path";
+import { separatorLock } from "../lock";
 
 export const ripAudio = (
   videoPath: string,
@@ -79,7 +80,7 @@ export const removeVocals = (audioFilePath: string, outputDir: string) => {
   });
 };
 
-export const getAudio = (inputDir: string, fileName: string = "video.mp4") => {
+export const getAudioSerial = (inputDir: string, fileName: string) => {
   return Effect.gen(function* () {
     // For our purpose, all associated data for a song goes in the same folder.
     const outputDir = inputDir;
@@ -90,4 +91,8 @@ export const getAudio = (inputDir: string, fileName: string = "video.mp4") => {
     yield* removeVocals(audioPath, outputDir);
     return;
   });
+};
+
+export const getAudio = (inputDir: string, fileName: string = "video.mp4") => {
+  return separatorLock.withPermits(1)(getAudioSerial(inputDir, fileName));
 };
